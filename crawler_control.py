@@ -8,6 +8,7 @@ services when a separately invoked apply mode explicitly permits it.
 from __future__ import annotations
 
 import argparse
+import secrets
 import ipaddress
 import json
 from datetime import datetime, timedelta, timezone
@@ -15,6 +16,8 @@ from pathlib import Path
 from urllib.request import Request, urlopen
 
 DURATIONS = (60, 300, 3000)  # Escalation levels: 1 / 5 / 50 minutes.
+PERMANENT_MIN_SECONDS = 18 * 60 * 60
+PERMANENT_MAX_SECONDS = 24 * 60 * 60
 
 
 def load_env(path: Path) -> dict[str, str]:
@@ -214,9 +217,20 @@ def main() -> None:
     for ip, record in list(state["records"].items()):
         if in_noncloud_google(ip, noncloud_ranges):
             record["permanent"] = False
+            record["permanent_until"] = None
             record["until"] = None
             record["reason"] = "google_services_noncloud_429_only"
             record["crawler_status"] = "Matched google-services-noncloud.conf: 429 only, no IP block"
+            continue
+        if record.get("permanent"):
+            expiry = record.get("permanent_until")
+            if not expiry:
+                duration = PERMANENT_MIN_SECONDS + secrets.randbelow(PERMANENT_MAX_SECONDS - PERMANENT_MIN_SECONDS + 1)
+                record["permanent_until"] = stamp(current + timedelta(seconds=duration))
+                expiry = record["permanent_until"]
+            if parse(expiry) <= current:
+                record.update({"permanent": False, "permanent_until": None, "until": None, "level": 0})
+                transitions.append({"at": stamp(current), "type": "permanent_expired", "ip": ip})
             continue
         until = record.get("until")
         if until:
@@ -258,9 +272,11 @@ def main() -> None:
             record["until"] = stamp(current + timedelta(seconds=duration))
             transitions.append({"at": stamp(current), "type": "temporary_403", "ip": ip, "duration_seconds": duration, "level": record["level"], "reason": reason})
         else:
+            duration = PERMANENT_MIN_SECONDS + secrets.randbelow(PERMANENT_MAX_SECONDS - PERMANENT_MIN_SECONDS + 1)
             record["permanent"] = True
+            record["permanent_until"] = stamp(current + timedelta(seconds=duration))
             record["until"] = None
-            transitions.append({"at": stamp(current), "type": "permanent_block", "ip": ip, "level": 4, "reason": reason})
+            transitions.append({"at": stamp(current), "type": "permanent_block", "ip": ip, "level": 4, "reason": reason, "duration_seconds": duration, "permanent_until": record["permanent_until"]})
 
     if args.remove:
         state["records"].pop(args.remove, None)
@@ -271,7 +287,7 @@ def main() -> None:
     write_json(owners_path, cache)
 
     active = sorted(ip for ip, record in state["records"].items() if record.get("until") and parse(record["until"]) > current)
-    permanent = sorted(ip for ip, record in state["records"].items() if record.get("permanent"))
+    permanent = sorted(ip for ip, record in state["records"].items() if record.get("permanent") and record.get("permanent_until") and parse(record["permanent_until"]) > current)
     # The cron runner always passes --dry-run. Apply remains a separate, explicit operation.
     if mode == "apply" and config.get("IP_BLOCK_MODE", "off") == "apply":
         base = f"/zones/{config['CF_ZONE_ID']}/rulesets/{config['CF_RULESET_ID']}"

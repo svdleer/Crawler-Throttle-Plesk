@@ -31,7 +31,7 @@ def view(record: dict, status: str) -> dict:
     return {
         "ip": record.get("ip", "—"),
         "level": record.get("level", "—"),
-        "until": record.get("until") or "—",
+        "until": record.get("until") or record.get("permanent_until") or "—",
         "owner": record.get("owner", "unknown"),
         "asn": record.get("asn", "—"),
         "country": record.get("country", "—"),
@@ -50,7 +50,10 @@ def transition_view(event: dict) -> dict:
     elif kind == "temporary_expired":
         description = f"Tijdelijke 403 verlopen na niveau {level}"
     elif kind == "permanent_block":
-        description = "Permanente blokkade voorgesteld (niveau 4)"
+        duration = event.get("duration_seconds", 0)
+        description = f"Permanente blokkade gestart: maximaal {duration // 3600} uur"
+    elif kind == "permanent_expired":
+        description = "Permanente blokkade verlopen en verwijderd"
     elif kind == "temporary_removed":
         description = "Tijdelijke blokkade verwijderd uit lokale policy"
     else:
