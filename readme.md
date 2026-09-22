@@ -75,3 +75,13 @@ sudo install -m 0600 -o root -g root /dev/null /etc/digisteden-crawler-guard/all
 ```
 
 The controller consumes and deletes that file on the next dry-run invocation. Removing `force-apply.lock` disables the apply-only safeguard and should only be done with an explicit operational decision.
+
+## Plesk installation
+
+On a new Plesk server, clone this repository and run:
+
+```bash
+sudo ./install.sh
+```
+
+The installer intentionally does not enable enforcement or alter generated Plesk vhost files. It installs runtime scripts under `/opt/crawler-throttle-plesk`, configuration templates under `/etc/crawler-throttle-plesk`, and the loopback control service. Configure domains, Cloudflare credentials, and normal-Nginx integration before enabling any cron enforcement.
