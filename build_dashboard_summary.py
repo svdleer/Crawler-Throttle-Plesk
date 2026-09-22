@@ -12,7 +12,7 @@ ESCALATION = (
     {"level": 1, "duration": "1 minuut", "action": "Tijdelijke 403"},
     {"level": 2, "duration": "5 minuten", "action": "Tijdelijke 403"},
     {"level": 3, "duration": "50 minuten", "action": "Tijdelijke 403"},
-    {"level": 4, "duration": "blijvend", "action": "Permanente blokkade voorgesteld"},
+    {"level": 4, "duration": "blijvend", "action": "Permanent block proposal"},
 )
 
 
@@ -46,16 +46,16 @@ def transition_view(event: dict) -> dict:
     level = event.get("level", "—")
     if kind == "temporary_403":
         duration = event.get("duration_seconds", 0)
-        description = f"Tijdelijke 403 gepland: niveau {level}, {duration // 60} minuut/minuten"
+        description = f"Temporary 403 scheduled: level {level}, {duration // 60} minute(s)"
     elif kind == "temporary_expired":
-        description = f"Tijdelijke 403 verlopen na niveau {level}"
+        description = f"Temporary 403 expired after level {level}"
     elif kind == "permanent_block":
         duration = event.get("duration_seconds", 0)
-        description = f"Permanente blokkade gestart: maximaal {duration // 3600} uur"
+        description = f"Permanent block started: maximum {duration // 3600} hour(s)"
     elif kind == "permanent_expired":
-        description = "Permanente blokkade verlopen en verwijderd"
+        description = "Permanent block expired and removed"
     elif kind == "temporary_removed":
-        description = "Tijdelijke blokkade verwijderd uit lokale policy"
+        description = "Temporary block removed from local policy"
     else:
         description = "Onbekende policy-transitie"
     return {"at": event.get("at", "—"), "ip": event.get("ip", "—"), "level": level, "reason": event.get("reason", "—"), "description": description}
@@ -75,9 +75,9 @@ def main() -> None:
     cutoff = current - timedelta(hours=24)
     mode = policy.get("mode", "dry-run")
     records = list(state.get("records", {}).values())
-    active = [view(record, "Geplande tijdelijke 403" if mode == "dry-run" else "Tijdelijke 403 actief") for record in records if record.get("until") and parse(record["until"]) > current]
-    permanent = [view(record, "Permanente blokkade voorgesteld" if mode == "dry-run" else "Permanente blokkade") for record in records if record.get("permanent")]
-    nominations = [view(record, "Recidive-nominatie") for record in records if not record.get("permanent")]
+    active = [view(record, "Temporary 403 scheduled" if mode == "dry-run" else "Temporary 403 active") for record in records if record.get("until") and parse(record["until"]) > current]
+    permanent = [view(record, "Permanent block proposal" if mode == "dry-run" else "Permanente blokkade") for record in records if record.get("permanent")]
+    nominations = [view(record, "Recidivism nomination") for record in records if not record.get("permanent")]
     events = []
     for event in state.get("events", []):
         try:
