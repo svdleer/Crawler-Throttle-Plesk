@@ -76,7 +76,7 @@ def main() -> None:
     mode = policy.get("mode", "dry-run")
     records = list(state.get("records", {}).values())
     active = [view(record, "Temporary 403 scheduled" if mode == "dry-run" else "Temporary 403 active") for record in records if record.get("until") and parse(record["until"]) > current]
-    permanent = [view(record, "Permanent block proposal" if mode == "dry-run" else "Permanente blokkade") for record in records if record.get("permanent")]
+    permanent = [view(record, "Permanent block proposal" if mode == "dry-run" else "Permanent block") for record in records if record.get("permanent")]
     nominations = [view(record, "Recidivism nomination") for record in records if not record.get("permanent")]
     events = []
     for event in state.get("events", []):
