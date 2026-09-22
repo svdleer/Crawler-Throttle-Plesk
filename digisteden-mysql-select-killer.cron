@@ -1,0 +1,1 @@
+* * * * * root /opt/scripts/crawler-guard/mysql_select_killer.py --config /etc/digisteden-mysql-killer.env >> /var/log/digisteden-mysql-select-killer.log 2>&1

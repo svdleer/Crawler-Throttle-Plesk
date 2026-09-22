@@ -1,0 +1,1 @@
+* * * * * root /opt/scripts/crawler-guard/php_fpm_recovery.py >> /var/log/digisteden-php-fpm-recovery.log 2>&1

@@ -1,9 +1,31 @@
-__pycache__/
-*.py[cod]
+# Credentials and environment-specific configuration
 *.env
+!*.env.example
 *.token
 *.key
 *.pem
+*.crt
+*.p12
+*.pfx
+
+# Runtime state, logs and generated enforcement data
 state/
 *.log
 *.ndjson
+*.sqlite
+*.sqlite3
+pressure-429.map
+pressure-429.conf
+crawler-guard-control.service.local
+
+# Python / editor artifacts
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.DS_Store
+.vscode/
+
+# Local deployment staging
+.tmp/
+*.tmp

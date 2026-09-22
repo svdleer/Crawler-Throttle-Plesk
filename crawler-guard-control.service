@@ -1,0 +1,15 @@
+[Unit]
+Description=Digisteden Crawler Guard control API
+After=network.target
+
+[Service]
+Type=simple
+User=root
+ExecStart=/usr/bin/python3 /opt/scripts/crawler-guard/control_api.py
+Restart=on-failure
+RestartSec=2
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

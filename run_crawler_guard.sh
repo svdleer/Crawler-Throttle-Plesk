@@ -30,6 +30,8 @@ trap 'rm -f "$JSON_TMP" "$POLICY_TMP" "$SUMMARY_TMP" "$HTML_TMP"' EXIT
 if "$BASE/light_monitor.py" "$CONFIG" "$STATE/light-monitor-state.json" "$JSON_TMP" "$STATE/slow-candidates.json"; then
     mv "$JSON_TMP" "$STATE/latest.json"
 
+    # Control-plane release: the scheduled path is explicitly local dry-run.
+    # Any later apply run must be a separate, reviewed manual operation.
     "$BASE/crawler_control.py" "$CONFIG" "$STATE/latest.json" "$STATE/slow-candidates.json" \
         "$STATE/control-state.json" "$STATE/owner-cache.json" "$STATE/events.ndjson" \
         > "$POLICY_TMP"
