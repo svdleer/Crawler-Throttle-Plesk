@@ -46,9 +46,9 @@ def transition_view(event: dict) -> dict:
     level = event.get("level", "—")
     if kind == "temporary_403":
         duration = event.get("duration_seconds", 0)
-        description = f"Temporary 403 scheduled: level {level}, {duration // 60} minute(s)"
+        description = f"Temporary Nginx 429 scheduled: level {level}, {duration // 60} minute(s)"
     elif kind == "temporary_expired":
-        description = f"Temporary 403 expired after level {level}"
+        description = f"Temporary Nginx 429 expired after level {level}"
     elif kind == "permanent_block":
         duration = event.get("duration_seconds", 0)
         description = f"Permanent block started: maximum {duration // 3600} hour(s)"
@@ -75,7 +75,7 @@ def main() -> None:
     cutoff = current - timedelta(hours=24)
     mode = policy.get("mode", "dry-run")
     records = list(state.get("records", {}).values())
-    active = [view(record, "Temporary 403 scheduled" if mode == "dry-run" else "Temporary 403 active") for record in records if record.get("until") and parse(record["until"]) > current]
+    active = [view(record, "Temporary Nginx 429 scheduled" if mode == "dry-run" else "Temporary Nginx 429 active") for record in records if record.get("until") and parse(record["until"]) > current]
     permanent = [view(record, "Permanent block proposal" if mode == "dry-run" else "Permanent block") for record in records if record.get("permanent")]
     nominations = [view(record, "Recidivism nomination") for record in records if not record.get("permanent")]
     events = []

@@ -293,7 +293,6 @@ def main() -> None:
         base = f"/zones/{config['CF_ZONE_ID']}/rulesets/{config['CF_RULESET_ID']}"
         rules = cf_request(config, base)["rules"]
         for key, addresses, description in (
-            ("CF_TEMP_403_RULE_ID", active, "Temporary 403 crawler escalation"),
             ("CF_PERMANENT_BLOCK_RULE_ID", permanent, "Crawler permanent block"),
         ):
             rule = next(rule for rule in rules if rule["id"] == config[key])
