@@ -64,7 +64,11 @@ def transition_view(event: dict) -> dict:
 def main() -> None:
     if len(sys.argv) != 5:
         raise SystemExit("usage: build_dashboard_summary.py CONFIG POLICY_LAST CONTROL_STATE OUTPUT")
-    _, _config, policy_path, state_path, output_path = sys.argv
+    _, config_path, policy_path, state_path, output_path = sys.argv
+    config = {}
+    for line in Path(config_path).read_text().splitlines():
+        if '=' in line and not line.lstrip().startswith('#'):
+            key, value = line.split('=', 1); config[key.strip()] = value.strip()
     policy = read_json(Path(policy_path), {})
     state = read_json(Path(state_path), {"records": {}, "events": []})
     current = datetime.now(timezone.utc)
@@ -89,6 +93,8 @@ def main() -> None:
     output = {
         "generated_at": current.isoformat(),
         "mode": mode,
+        "tooling_enabled": config.get("TOOLING_ENABLED", "on") == "on",
+        "dry_run_enabled": config.get("MODE", "apply") == "dry-run" or config.get("POLICY_MODE", "apply") == "dry-run",
         "top_urls_1h": top_urls_1h,
         "active_temp_blocks": active,
         "permanent_blocks": permanent,
